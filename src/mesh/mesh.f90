@@ -222,30 +222,31 @@ ALLOCATE(blending_glob(1,0:Ngeo_out,0:Ngeo_out,0:Ngeo_out,nElems))
 xi0Elem=0.
 DO iElem=1,nElems
   iTree=QuadToTree(iElem)+1
-  !interpolate tree HO mapping from NGeo to Ngeo_out
+!  !interpolate tree HO mapping from NGeo to Ngeo_out
   CALL InitializeVandermonde(Ngeo,Ngeo_out,wBary_Ngeo,xi_Ngeo,xiCL_Ngeo_out,Vdm_Ngeo_Ngeo_out)
   CALL ChangeBasis3D(3,Ngeo,Ngeo_out,Vdm_Ngeo_Ngeo_out,XGeo(:,:,:,:,iTree),Xgeo_tree)
 
   ! transform p4est first corner coordinates (integer from 0... intsize) to [-1,1] reference element
   xi0(:)=-1.+2.*REAL(QuadCoords(:,iElem))*sIntSize
   xi0Elem(:,iElem)=xi0
-  ! length of each quadrant in integers
-  length=2./REAL(2**QuadLevel(iElem))
-  ! Build Vandermonde matrices for each parameter range in xi, eta,zeta
-  IF(doSplineInterpolation)THEN
-    CALL getSplineVandermonde(Ngeo_out+1,Ngeo_out+1,Vdm_xi(:,:)  ,xi0(1)+0.5*(xiCL_Ngeo_out(:)+1.)*Length)
-    CALL getSplineVandermonde(Ngeo_out+1,Ngeo_out+1,Vdm_eta(:,:) ,xi0(2)+0.5*(xiCL_Ngeo_out(:)+1.)*Length)
-    CALL getSplineVandermonde(Ngeo_out+1,Ngeo_out+1,Vdm_zeta(:,:),xi0(3)+0.5*(xiCL_Ngeo_out(:)+1.)*Length)
-  ELSE !polynomials
-    DO i=0,Ngeo_out
-      dxi=0.5*(xiCL_Ngeo_out(i)+1.)*Length
-      CALL LagrangeInterpolationPolys(xi0(1) + dxi,Ngeo_out,xiCL_Ngeo_out,wBaryCL_Ngeo_out,Vdm_xi(i,:)) 
-      CALL LagrangeInterpolationPolys(xi0(2) + dxi,Ngeo_out,xiCL_Ngeo_out,wBaryCL_Ngeo_out,Vdm_eta(i,:)) 
-      CALL LagrangeInterpolationPolys(xi0(3) + dxi,Ngeo_out,xiCL_Ngeo_out,wBaryCL_Ngeo_out,Vdm_zeta(i,:)) 
-    END DO
-  END IF
-  !interpolate tree HO mapping to quadrant HO mapping (If Ngeo_out < Ngeo: Interpolation error!)
-  CALL ChangeBasis3D_XYZ(3,Ngeo_out,Ngeo_out,Vdm_xi,Vdm_eta,Vdm_zeta,XGeo_tree,XgeoElem(:,:,:,:,iElem))
+  XgeoElem(:,:,:,:,iElem)=Xgeo_tree
+!  ! length of each quadrant in integers
+!  length=2./REAL(2**QuadLevel(iElem))
+!  ! Build Vandermonde matrices for each parameter range in xi, eta,zeta
+!  IF(doSplineInterpolation)THEN
+!    CALL getSplineVandermonde(Ngeo_out+1,Ngeo_out+1,Vdm_xi(:,:)  ,xi0(1)+0.5*(xiCL_Ngeo_out(:)+1.)*Length)
+!    CALL getSplineVandermonde(Ngeo_out+1,Ngeo_out+1,Vdm_eta(:,:) ,xi0(2)+0.5*(xiCL_Ngeo_out(:)+1.)*Length)
+!    CALL getSplineVandermonde(Ngeo_out+1,Ngeo_out+1,Vdm_zeta(:,:),xi0(3)+0.5*(xiCL_Ngeo_out(:)+1.)*Length)
+!  ELSE !polynomials
+!    DO i=0,Ngeo_out
+!      dxi=0.5*(xiCL_Ngeo_out(i)+1.)*Length
+!      CALL LagrangeInterpolationPolys(xi0(1) + dxi,Ngeo_out,xiCL_Ngeo_out,wBaryCL_Ngeo_out,Vdm_xi(i,:)) 
+!      CALL LagrangeInterpolationPolys(xi0(2) + dxi,Ngeo_out,xiCL_Ngeo_out,wBaryCL_Ngeo_out,Vdm_eta(i,:)) 
+!      CALL LagrangeInterpolationPolys(xi0(3) + dxi,Ngeo_out,xiCL_Ngeo_out,wBaryCL_Ngeo_out,Vdm_zeta(i,:)) 
+!    END DO
+!  END IF
+!  !interpolate tree HO mapping to quadrant HO mapping (If Ngeo_out < Ngeo: Interpolation error!)
+!  CALL ChangeBasis3D_XYZ(3,Ngeo_out,Ngeo_out,Vdm_xi,Vdm_eta,Vdm_zeta,XGeo_tree,XgeoElem(:,:,:,:,iElem))
 END DO !iElem=1,nElems
 
 
