@@ -10,7 +10,7 @@ PUBLIC
 SAVE
 !-----------------------------------------------------------------------------------------------------------------------------------
 
-LOGICAL          :: checkJacobian
+LOGICAL          :: checkJacobian,doDebugVisu
 INTEGER          :: Nanalyze
 REAL,ALLOCATABLE :: Vdm_analyze(:,:)
 REAL,ALLOCATABLE :: D_Ngeo_out(:,:)

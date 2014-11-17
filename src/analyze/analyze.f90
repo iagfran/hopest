@@ -50,6 +50,7 @@ REAL,ALLOCATABLE           :: xi(:)
 !===================================================================================================================================
 
 checkJacobian=GETLOGICAL('checkJacobian','T')
+doDebugVisu=GETLOGICAL('doDebugVisu','F')
 
 WRITE(tmpstr,'(I5)')FLOOR(1.5*Ngeo_out)
 Nanalyze=GETINT('Nanalyze',tmpstr)
@@ -73,10 +74,7 @@ SUBROUTINE Analyze()
 ! Basic Analyze initialization. 
 !===================================================================================================================================
 ! MODULES
-USE MODH_Analyze_Vars,ONLY:checkJacobian
-USE MODH_Mesh_Vars,   ONLY:NGeo_out,nElems,blending_glob,xGeoElem
-USE MODH_Output_Vars, ONLY: Projectname
-USE MODH_Tecplot     ,ONLY:WriteDataToTecplotBinary3D
+USE MODH_Analyze_Vars,ONLY:checkJacobian,doDebugVisu
 ! IMPLICIT VARIABLE HANDLING
 IMPLICIT NONE
 !-----------------------------------------------------------------------------------------------------------------------------------
@@ -85,12 +83,66 @@ IMPLICIT NONE
 ! OUTPUT VARIABLES
 !-----------------------------------------------------------------------------------------------------------------------------------
 ! LOCAL VARIABLES 
-CHARACTER(LEN=255) :: VarNames(1)
 !===================================================================================================================================
 IF(CheckJacobian) CALL CheckJac()
-VarNames(1)='blending'
-CALL WriteDataToTecplotBinary3D(Ngeo_out,nElems,1,VarNames,blending_glob,TRIM(ProjectName)//'_Debugmesh.plt',0.,xGeoElem)
+IF(doDebugVisu)   CALL DebugVisu()
+  
 END SUBROUTINE Analyze
+
+
+SUBROUTINE DebugVisu()
+!===================================================================================================================================
+! Basic Analyze initialization. 
+!===================================================================================================================================
+! MODULES
+USE MODH_Globals
+USE MODH_Globals
+USE MODH_Mesh_Vars,   ONLY: NGeo_out,nElems,blending_glob,xGeoElem
+USE MODH_Mesh_Vars,   ONLY: xi0Elem
+USE MODH_Mesh_Vars,   ONLY: xiCL_Ngeo_out,wBaryCL_Ngeo_out
+USE MODH_Mesh_Vars,   ONLY: doSplineInterpolation
+USE MODH_Spline1D,    ONLY: GetSplineVandermonde
+USE MODH_P4EST_Vars,  ONLY: QuadLevel
+USE MODH_Basis,       ONLY: LagrangeInterpolationPolys
+USE MODH_ChangeBasis, ONLY: ChangeBasis3D_XYZ 
+USE MODH_Output_Vars, ONLY: Projectname
+USE MODH_Tecplot     ,ONLY: WriteDataToTecplotBinary3D
+! IMPLICIT VARIABLE HANDLING
+IMPLICIT NONE
+!-----------------------------------------------------------------------------------------------------------------------------------
+! INPUT VARIABLES
+!-----------------------------------------------------------------------------------------------------------------------------------
+! OUTPUT VARIABLES
+!-----------------------------------------------------------------------------------------------------------------------------------
+! LOCAL VARIABLES 
+CHARACTER(LEN=255)                    :: VarNames(1)
+INTEGER                               :: iElem,i
+REAL                                  :: length,dxi
+REAL,DIMENSION(0:Ngeo_out,0:NGeo_out) :: Vdm_xi,Vdm_eta,Vdm_zeta
+REAL                                  :: XGeo_visu(3,0:NGeo_out,0:NGeo_out,0:Ngeo_out,nElems)
+!===================================================================================================================================
+
+WRITE(Unit_StdOut,'(A,A)') ' Writing Debugmesh to Tecplot: ',TRIM(ProjectName)//'_p4est_Debugmesh.plt'
+DO iElem=1,nElems
+  ! interpolate the HO volume mapping from tree level+Ngeo to quad level+Ngeo_out
+  ! length of each quadrant in integers
+  length=2./REAL(2**QuadLevel(iElem))
+  ! Build Vandermonde matrices for each parameter range in xi, eta,zeta
+  DO i=0,Ngeo_out
+    dxi=0.5*(xiCL_Ngeo_out(i)+1.)*Length
+    CALL LagrangeInterpolationPolys(xi0Elem(1,iElem) + dxi,Ngeo_out,xiCL_Ngeo_out,wBaryCL_Ngeo_out,Vdm_xi(i,:)) 
+    CALL LagrangeInterpolationPolys(xi0Elem(2,iElem) + dxi,Ngeo_out,xiCL_Ngeo_out,wBaryCL_Ngeo_out,Vdm_eta(i,:)) 
+    CALL LagrangeInterpolationPolys(xi0Elem(3,iElem) + dxi,Ngeo_out,xiCL_Ngeo_out,wBaryCL_Ngeo_out,Vdm_zeta(i,:)) 
+  END DO
+  !interpolate tree HO mapping on quadrant at Ngeo_out
+  CALL ChangeBasis3D_XYZ(3,Ngeo_out,Ngeo_out,Vdm_xi,Vdm_eta,Vdm_zeta,XGeoElem(:,:,:,:,iElem),xGeo_visu(:,:,:,:,iElem))
+END DO!iElem
+
+VarNames(1)='blending'
+CALL WriteDataToTecplotBinary3D(Ngeo_out,nElems,1,VarNames,blending_glob,TRIM(ProjectName)//'_p4est_Debugmesh.plt',0.,xGeo_visu)
+
+END SUBROUTINE DebugVisu
+
 
 
 SUBROUTINE CheckJac()

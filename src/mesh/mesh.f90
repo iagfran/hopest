@@ -250,11 +250,11 @@ DO iElem=1,nElems
 END DO !iElem=1,nElems
 
 
-IF(Ngeo_out.GE.Ngeo) THEN
+!IF(Ngeo_out.GE.Ngeo) THEN
  RETURN
-ELSE
- WRITE(*,*)'!!!!!!!!! WARNING: Correction of the BC surfaces with quad-local mapping! Experimental...!'
-END IF
+!ELSE
+! WRITE(*,*)'!!!!!!!!! WARNING: Correction of the BC surfaces with quad-local mapping! Experimental...!'
+!END IF
 ! For Ngeo>1 and Ngeo_out < Ngeo, we need to correct the mortar faces!!
 
 ! correction of the BC faces (evaluation of the Ngeo Tree Mapping on Quads and watertight)
