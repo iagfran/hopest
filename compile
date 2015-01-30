@@ -10,7 +10,7 @@ cat <<EOF
 EOF
 
 FIRST=
-COMPILER='GNU_DEBUG'
+COMPILER='GNU'
 
 #First the bootstrapper:
 if [[ $FIRST == T ]]; then
