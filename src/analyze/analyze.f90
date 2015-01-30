@@ -137,7 +137,6 @@ DO iElem=1,nElems
   !interpolate tree HO mapping on quadrant at Ngeo_out
   CALL ChangeBasis3D_XYZ(3,Ngeo_out,Ngeo_out,Vdm_xi,Vdm_eta,Vdm_zeta,XGeoElem(:,:,:,:,iElem),xGeo_visu(:,:,:,:,iElem))
 END DO!iElem
-
 VarNames(1)='blending'
 CALL WriteDataToTecplotBinary3D(Ngeo_out,nElems,1,VarNames,blending_glob,TRIM(ProjectName)//'_p4est_Debugmesh.plt',0.,xGeo_visu)
 
